@@ -1,0 +1,56 @@
+buckets:
+  fed:
+    label: "Federal Reserve"
+    role: "ru_policy"
+    include_in_headline: true
+    description: "SOMA and Federal Reserve Treasury absorption."
+  banks:
+    label: "Banks and depositories"
+    role: "ru_private"
+    include_in_headline: true
+    description: "Depository Treasury absorption, including broad-bank sensitivities."
+  row:
+    label: "Rest of world"
+    role: "ru_external"
+    include_in_headline: true
+    description: "Foreign official and private Treasury absorption, with TIC splits used as validation."
+  mmf:
+    label: "Money-market funds"
+    role: "plumbing"
+    include_in_headline: true
+    description: "Treasury and repo absorption by money-market funds and related ON RRP plumbing."
+  domestic_nonbank:
+    label: "Domestic final nonbanks"
+    role: "du_base"
+    include_in_headline: true
+    description: "Domestic nonbank deposit-user sectors used as the omitted/base absorber group."
+  dealer_bridge:
+    label: "Dealers and bridge intermediaries"
+    role: "bridge"
+    include_in_headline: true
+    description: "Primary dealers, brokers, and short-run warehousing sectors."
+  other_financial:
+    label: "Other financials"
+    role: "domestic_financial"
+    include_in_headline: false
+    description: "Financial sectors not otherwise separated in the headline taxonomy."
+  unmapped:
+    label: "Residual or unmapped"
+    role: "residual"
+    include_in_headline: false
+    description: "Residual bucket retained for reconciliation and source-quality checks."
+
+functional_blocks:
+  ru_like:
+    - fed
+    - banks
+    - row
+  mmf_plumbing:
+    - mmf
+  du_base:
+    - domestic_nonbank
+  bridge:
+    - dealer_bridge
+  residual:
+    - other_financial
+    - unmapped

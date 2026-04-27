@@ -1,0 +1,35 @@
+panel_keys:
+  - quarter
+
+core_inputs:
+  - tdc_tier1
+  - gross_marketable_issuance
+  - bill_share
+  - issue_wam
+  - wam_gap_trailing
+  - toc_change
+  - fed_remit_positive
+
+sector_transaction_columns:
+  fed: sector_tx_fed
+  banks: sector_tx_banks
+  row: sector_tx_row
+  mmf: sector_tx_mmf
+  domestic_nonbank: sector_tx_domestic_nonbank
+  dealer_bridge: sector_tx_dealer_bridge
+  other_financial: sector_tx_other_financial
+  unmapped: sector_tx_unmapped
+
+core_outcomes:
+  - deposits
+  - bank_credit
+  - reserves
+  - onrrp
+  - mmf_treasury
+
+headline_horizons:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
