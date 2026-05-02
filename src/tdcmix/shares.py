@@ -15,16 +15,22 @@ def add_positive_absorption_shares(
         raise ValueError(f"Missing sector transaction columns: {missing}")
 
     out = frame.copy()
-    positive_components = {
-        sector: out[column].clip(lower=0) for sector, column in sector_columns.items()
+    numeric_components = {
+        sector: pd.to_numeric(out[column], errors="coerce")
+        for sector, column in sector_columns.items()
     }
-    out[denominator_column] = sum(positive_components.values())
+    observed_any_sector = pd.concat(numeric_components.values(), axis=1).notna().any(axis=1)
+    positive_components = {
+        sector: series.fillna(0).clip(lower=0)
+        for sector, series in numeric_components.items()
+    }
+    out[denominator_column] = sum(positive_components.values()).where(observed_any_sector)
+    denominator = pd.to_numeric(out[denominator_column], errors="coerce")
+    nonzero_denominator = denominator.where(denominator != 0)
 
     for sector, series in positive_components.items():
         share_column = f"{prefix}_{sector}"
-        out[share_column] = series.div(out[denominator_column]).where(
-            out[denominator_column] != 0
-        )
+        out[share_column] = series.div(nonzero_denominator)
 
     return out
 

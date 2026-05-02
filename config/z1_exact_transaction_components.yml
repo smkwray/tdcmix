@@ -1,0 +1,149 @@
+schema_version: 0.1.0
+description: >
+  Exact Z.1/FRED quarterly Treasury-security transaction components for
+  holder-absorption reconciliation. FRED FU series are quarterly transaction
+  flows in millions of dollars, not seasonally adjusted; project outputs use
+  billions of dollars.
+
+defaults:
+  frequency: quarterly
+  units_in: millions_usd
+  units_out: billions_usd
+  transform: divide_by_1000
+  series_type: transaction_flow
+  source: FRED Z.1
+
+anchors:
+  all_sectors:
+    fred_id: BOGZ1FU893061105Q
+    fof_code: FU893061105.Q
+    output_column: exact_all_holder_transactions_bn
+    description: All sectors; Treasury securities; asset, transactions.
+  issuer_marketable:
+    fred_id: BOGZ1FU313161105Q
+    fof_code: FU313161105.Q
+    output_column: issuer_marketable_treasury_liability_transactions_bn
+    description: Federal government; total marketable Treasury securities; liability, transactions.
+
+components:
+  - key: monetary_authority_total_treasuries
+    fred_id: BOGZ1FU713061103Q
+    fof_code: FU713061103.Q
+    bucket: fed
+    description: Monetary authority; total Treasury securities; asset, transactions.
+
+  - key: us_chartered_depositories_total_treasuries
+    fred_id: BOGZ1FU763061100Q
+    fof_code: FU763061100.Q
+    bucket: banks
+    description: U.S.-chartered depository institutions; Treasury securities; asset, transactions.
+
+  - key: banks_us_affiliated_areas_total_treasuries
+    fred_id: BOGZ1FU743061103Q
+    fof_code: FU743061103.Q
+    bucket: banks
+    description: Banks in U.S.-affiliated areas; Treasury securities; asset, transactions.
+
+  - key: foreign_banking_offices_us_total_treasuries
+    fred_id: BOGZ1FU753061103Q
+    fof_code: FU753061103.Q
+    bucket: banks
+    description: Foreign banking offices in the U.S.; Treasury securities; asset, transactions.
+
+  - key: credit_unions_total_treasuries
+    fred_id: BOGZ1FU473061105Q
+    fof_code: FU473061105.Q
+    bucket: banks
+    description: Credit unions; Treasury securities; asset, transactions.
+
+  - key: rest_of_world_total_treasuries
+    fred_id: BOGZ1FU263061105Q
+    fof_code: FU263061105.Q
+    bucket: row
+    description: Rest of the world; Treasury securities; asset, transactions.
+
+  - key: money_market_funds_total_treasuries
+    fred_id: BOGZ1FU633061105Q
+    fof_code: FU633061105.Q
+    bucket: mmf
+    description: Money market funds; Treasury securities; asset, transactions.
+
+  - key: nonfinancial_corporate_treasuries
+    fred_id: BOGZ1FU103061103Q
+    fof_code: FU103061103.Q
+    bucket: domestic_nonbank
+    description: Nonfinancial corporate business; Treasury securities; asset, transactions.
+
+  - key: nonfinancial_noncorporate_us_government_securities
+    fred_id: BOGZ1FU113061003Q
+    fof_code: FU113061003.Q
+    bucket: domestic_nonbank
+    description: Nonfinancial noncorporate business; total U.S. government securities; asset, transactions.
+    caveat: Broader U.S. government securities label; manual review before behavioral interpretation.
+
+  - key: state_local_governments_treasuries_ex_slgs
+    fred_id: BOGZ1FU213061103Q
+    fof_code: FU213061103.Q
+    bucket: domestic_nonbank
+    description: State and local governments; Treasury securities excluding SLGS; asset, transactions.
+
+  - key: households_nonprofits_treasuries_residual_holder
+    fred_id: BOGZ1FU153061105Q
+    fof_code: FU153061105.Q
+    bucket: domestic_nonbank
+    description: Households and nonprofit organizations; Treasury securities; asset, transactions.
+    caveat: Z.1 residual-holder construction; do not interpret as directly observed household purchases.
+
+  - key: security_brokers_dealers_treasuries_net
+    fred_id: BOGZ1FU663061105Q
+    fof_code: FU663061105.Q
+    bucket: dealer_bridge
+    description: Security brokers and dealers; Treasury securities net; asset, transactions.
+
+  - key: government_sponsored_enterprises_treasuries
+    fred_id: BOGZ1FU403061105Q
+    fof_code: FU403061105.Q
+    bucket: other_financial
+    description: Government-sponsored enterprises; Treasury securities; asset, transactions.
+
+  - key: insurance_pensions_total_treasuries
+    fred_id: BOGZ1FU583061105Q
+    fof_code: FU583061105.Q
+    bucket: other_financial
+    description: Insurance companies and pension funds; Treasury securities; asset, transactions.
+
+  - key: mutual_funds_treasuries
+    fred_id: BOGZ1FU653061105Q
+    fof_code: FU653061105.Q
+    bucket: other_financial
+    description: Mutual funds; Treasury securities; asset, transactions.
+
+  - key: closed_end_funds_treasuries
+    fred_id: BOGZ1FU553061103Q
+    fof_code: FU553061103.Q
+    bucket: other_financial
+    description: Closed-end funds; Treasury securities; asset, transactions.
+
+  - key: exchange_traded_funds_treasuries
+    fred_id: BOGZ1FU563061103Q
+    fof_code: FU563061103.Q
+    bucket: other_financial
+    description: Exchange-traded funds; Treasury securities; asset, transactions.
+
+  - key: asset_backed_securities_issuers_treasuries
+    fred_id: BOGZ1FU673061103Q
+    fof_code: FU673061103.Q
+    bucket: other_financial
+    description: ABS issuers; Treasury securities; asset, transactions.
+
+  - key: holding_companies_treasuries
+    fred_id: BOGZ1FU733061103Q
+    fof_code: FU733061103.Q
+    bucket: other_financial
+    description: Holding companies; Treasury securities; asset, transactions.
+
+  - key: central_clearing_counterparties_treasuries
+    fred_id: BOGZ1FU503061123Q
+    fof_code: FU503061123.Q
+    bucket: other_financial
+    description: Other financial business; Treasury securities held by central clearing counterparties; asset, transactions.

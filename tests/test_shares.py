@@ -40,3 +40,22 @@ def test_validate_share_sums_rejects_bad_rows() -> None:
 
     with pytest.raises(ValueError, match="fail tolerance"):
         validate_share_sums(frame, ["a", "b"])
+
+
+def test_add_positive_absorption_shares_treats_missing_sector_values_as_zero() -> None:
+    frame = pd.DataFrame(
+        {
+            "sector_tx_banks": [100.0],
+            "sector_tx_mmf": [pd.NA],
+        }
+    )
+    sector_columns = {
+        "banks": "sector_tx_banks",
+        "mmf": "sector_tx_mmf",
+    }
+
+    out = add_positive_absorption_shares(frame, sector_columns)
+
+    assert out.loc[0, "positive_absorption_total"] == 100.0
+    assert out.loc[0, "pos_abs_share_banks"] == 1.0
+    assert out.loc[0, "pos_abs_share_mmf"] == 0.0

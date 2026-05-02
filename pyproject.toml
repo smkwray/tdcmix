@@ -5,6 +5,7 @@ description = "Holder-mix and issuance-composition tooling for TDC research"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+  "matplotlib>=3.8",
   "pandas>=2.2",
   "pyyaml>=6.0",
 ]
@@ -12,6 +13,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
+  "ruff>=0.6",
 ]
 
 [build-system]

@@ -1,0 +1,305 @@
+schema_version: 0.1.0
+description: >
+  MVP source contract for the quarterly TDC holder-absorption panel. Entries
+  document the first allowed source candidate for each canonical output column;
+  placeholder entries are explicit where the transform still needs promotion.
+
+defaults:
+  frequency: quarterly
+  units: billions_usd
+  date_column: date
+
+panel:
+  output_path: data/processed/holder_absorption_panel.csv
+  source_overlap_audit_path: data/processed/source_overlap_audit.csv
+  sector_map_audit_path: data/processed/sector_map_audit.csv
+  keys:
+    - quarter
+  required_output_columns:
+    - quarter
+    - tdc_tier1
+    - gross_marketable_issuance
+    - bill_share
+    - issue_wam
+    - wam_gap_trailing
+    - toc_change
+    - fed_remit_positive
+    - sector_tx_fed
+    - sector_tx_banks
+    - sector_tx_row
+    - sector_tx_mmf
+    - sector_tx_domestic_nonbank
+    - sector_tx_dealer_bridge
+    - sector_tx_other_financial
+    - sector_tx_unmapped
+    - deposits
+    - bank_credit
+    - reserves
+    - onrrp
+    - mmf_treasury
+
+sources:
+  - key: tdc_tier1
+    output_column: tdc_tier1
+    role: tdc_component
+    concept: flow
+    source_project: tdcest
+    path: ../tdcest/data/processed/tdc_estimates.csv
+    source_columns:
+      - tdc_tier1_fed_corrected_bank_only_ru_flow
+    transform: rename
+    status: source_candidate
+    notes: Canonical quarterly Tier 1 bank-only TDC object from tdcest.
+
+  - key: toc_change
+    output_column: toc_change
+    role: tdc_component
+    concept: flow
+    source_project: tdcest
+    path: ../tdcest/data/processed/tdc_components.csv
+    source_columns:
+      - minus_treasury_operating_cash_tx
+    transform: sign_normalize_to_toc_change
+    status: source_candidate
+    notes: Contract keeps the sign question explicit; tdcest stores the minus-TOC contribution.
+
+  - key: fed_remit_positive
+    output_column: fed_remit_positive
+    role: tdc_component
+    concept: flow
+    source_project: tdcest
+    path: ../tdcest/data/processed/tdc_components.csv
+    source_columns:
+      - fed_remit_positive
+    transform: rename
+    status: source_candidate
+    notes: Positive Fed remittance contribution already clipped upstream.
+
+  - key: sector_tx_fed
+    output_column: sector_tx_fed
+    role: holder_transaction
+    concept: transaction
+    holder_bucket: fed
+    source_project: tsyparty
+    path: ../tsyparty/data/interim/z1_holdings_wide.csv
+    source_columns:
+      - fed
+    transform: diff_holdings_fed_bn
+    status: source_candidate
+    notes: Long-history Z.1 monetary-authority holdings-diff flow proxy in billions; exact transaction diagnostics remain separate.
+
+  - key: sector_tx_banks
+    output_column: sector_tx_banks
+    role: holder_transaction
+    concept: transaction
+    holder_bucket: banks
+    source_project: tsyparty
+    path: ../tsyparty/outputs/holder_response/issuance_maturity_response/sector_transaction_groups.csv
+    source_columns:
+      - sector
+      - transactions_bn
+    transform: filter_sector_eq_banks
+    status: source_candidate
+    notes: Long-history grouped bank Treasury transaction flow in billions; reconcile separately against tdcest bank perimeter.
+
+  - key: sector_tx_row
+    output_column: sector_tx_row
+    role: holder_transaction
+    concept: transaction
+    holder_bucket: row
+    source_project: tsyparty
+    path: ../tsyparty/outputs/holder_response/issuance_maturity_response/sector_transaction_groups.csv
+    source_columns:
+      - sector
+      - transactions_bn
+    transform: filter_sector_eq_foreign_holders
+    status: source_candidate
+    notes: Long-history grouped foreign-holder Treasury transaction flow in billions.
+
+  - key: sector_tx_mmf
+    output_column: sector_tx_mmf
+    role: holder_transaction
+    concept: transaction
+    holder_bucket: mmf
+    source_project: tsyparty
+    path: ../tsyparty/outputs/holder_response/issuance_maturity_response/sector_transaction_groups.csv
+    source_columns:
+      - sector
+      - transactions_bn
+    transform: filter_sector_eq_money_funds
+    status: source_candidate
+    notes: Grouped sector transaction panel; validate against Z.1 money-market-fund Treasury line before headline use.
+
+  - key: sector_tx_domestic_nonbank
+    output_column: sector_tx_domestic_nonbank
+    role: holder_transaction
+    concept: transaction
+    holder_bucket: domestic_nonbank
+    source_project: tsyparty
+    path: ../tsyparty/outputs/holder_response/issuance_maturity_response/sector_transaction_groups.csv
+    source_columns:
+      - sector
+      - transactions_bn
+    transform: sum_sectors_households_nonprofits_nonfinancial_businesses_state_local
+    status: source_candidate
+    notes: Domestic final nonbank grouping; keep separate from MMFs and other financials.
+
+  - key: sector_tx_dealer_bridge
+    output_column: sector_tx_dealer_bridge
+    role: holder_transaction
+    concept: transaction
+    holder_bucket: dealer_bridge
+    source_project: tsyparty
+    path: ../tsyparty/outputs/holder_response/issuance_maturity_response/sector_transaction_groups.csv
+    source_columns:
+      - sector
+      - transactions_bn
+    transform: filter_sector_eq_dealers
+    status: source_candidate
+    notes: Short-run warehousing bridge; do not merge into final domestic nonbanks.
+
+  - key: sector_tx_other_financial
+    output_column: sector_tx_other_financial
+    role: holder_transaction
+    concept: transaction
+    holder_bucket: other_financial
+    source_project: tsyparty
+    path: ../tsyparty/outputs/holder_response/issuance_maturity_response/sector_transaction_groups.csv
+    source_columns:
+      - sector
+      - transactions_bn
+    transform: sum_sectors_mutual_funds_etfs_pensions_insurers_other_domestic_financials
+    status: source_candidate
+    notes: Non-headline financial bucket retained to keep the residual interpretable.
+
+  - key: sector_tx_unmapped
+    output_column: sector_tx_unmapped
+    role: holder_transaction
+    concept: transaction
+    holder_bucket: unmapped
+    source_project: tsyparty
+    path: ../tsyparty/data/interim/z1_holdings_long.csv
+    source_columns:
+      - sector
+      - instrument
+      - holdings
+    transform: diff_total_holdings_minus_named_buckets
+    status: source_candidate
+    notes: Computed as all-sector Z.1 holdings-diff flow proxy less named buckets, all in billions; exact 2022+ transaction residual is retained as validation.
+
+  - key: gross_marketable_issuance
+    output_column: gross_marketable_issuance
+    role: issuance_composition
+    concept: flow
+    source_project: tsyparty
+    path: ../tsyparty/outputs/holder_response/issuance_maturity_response/quarterly_issuance_maturity.csv
+    source_columns:
+      - issuance_volume_bn
+    transform: rename
+    status: source_candidate
+    notes: Gross quarterly issuance volume from the tsyparty issuance-maturity panel.
+
+  - key: bill_share
+    output_column: bill_share
+    role: issuance_composition
+    concept: share
+    units: share
+    source_project: tsyparty
+    path: ../tsyparty/outputs/holder_response/issuance_maturity_response/quarterly_issuance_maturity.csv
+    source_columns:
+      - bill_share
+    transform: rename
+    status: source_candidate
+    notes: Auction offering amount bill share by issue quarter.
+
+  - key: issue_wam
+    output_column: issue_wam
+    role: issuance_composition
+    concept: maturity
+    units: years
+    source_project: tsyparty
+    path: ../tsyparty/outputs/holder_response/issuance_maturity_response/quarterly_issuance_maturity.csv
+    source_columns:
+      - issuance_wam_years
+    transform: rename
+    status: source_candidate
+    notes: Weighted average maturity of current-quarter issuance.
+
+  - key: wam_gap_trailing
+    output_column: wam_gap_trailing
+    role: issuance_composition
+    concept: maturity_gap
+    units: years
+    source_project: tsyparty
+    path: ../tsyparty/outputs/holder_response/issuance_maturity_response/quarterly_issuance_maturity.csv
+    source_columns:
+      - issuance_wam_gap_years
+    transform: lag_one_quarter
+    status: source_candidate
+    no_lookahead: true
+    notes: Must use only information available before the outcome quarter.
+
+  - key: deposits
+    output_column: deposits
+    role: outcome
+    concept: flow
+    source_project: tdcpass
+    path: ../tdcpass/data/derived/quarterly_panel.csv
+    date_column: quarter
+    source_columns:
+      - total_deposits_bank_qoq
+    transform: rename
+    status: source_candidate
+    notes: Headline bank deposit outcome from the quarterly pass-through panel.
+
+  - key: bank_credit
+    output_column: bank_credit
+    role: outcome
+    concept: flow
+    source_project: tdcpass
+    path: ../tdcpass/data/derived/quarterly_panel.csv
+    date_column: quarter
+    source_columns:
+      - bank_credit_private_qoq
+    transform: rename
+    status: source_candidate
+    notes: Private bank-credit proxy used in downstream pass-through analysis.
+
+  - key: reserves
+    output_column: reserves
+    role: outcome
+    concept: flow
+    source_project: tdcpass
+    path: ../tdcpass/data/derived/quarterly_panel.csv
+    date_column: quarter
+    source_columns:
+      - reserves_qoq
+    transform: rename
+    status: source_candidate
+    notes: Quarterly reserves change.
+
+  - key: onrrp
+    output_column: onrrp
+    role: outcome
+    concept: flow
+    source_project: tdcpass
+    path: ../tdcpass/data/derived/quarterly_panel.csv
+    date_column: quarter
+    source_columns:
+      - on_rrp_reallocation_qoq
+    transform: rename
+    status: source_candidate
+    notes: ON RRP plumbing channel proxy from downstream pass-through work.
+
+  - key: mmf_treasury
+    output_column: mmf_treasury
+    role: outcome
+    concept: flow
+    source_project: tdcpass
+    path: ../tdcpass/data/derived/quarterly_panel.csv
+    date_column: quarter
+    source_columns:
+      - mmf_treasury_bills_reallocation_qoq
+    transform: rename
+    status: source_candidate
+    notes: Money-fund Treasury-bill reallocation proxy; validate against direct MMF holdings before interpretation.
