@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from tdcmix.cli import main
@@ -7,6 +8,21 @@ from tdcmix.cli import main
 
 def test_cli_validate_contracts() -> None:
     assert main(["validate-contracts"]) == 0
+
+
+def test_documented_exact_primary_pipeline() -> None:
+    for command in (
+        "write-panel", "write-validation", "write-design", "write-estimates",
+        "write-z1-exact", "write-z1-exact-analysis", "write-exact-primary-panel",
+        "write-exact-primary-analysis", "write-audits",
+    ):
+        assert main([command]) == 0
+
+    directory = Path("data/processed/exact_primary_analysis")
+    comparisons = pd.read_csv(directory / "exact_primary_artifact_comparison.csv")
+    status = pd.read_csv(directory / "exact_primary_analysis_status.csv")
+    assert comparisons["status"].eq("matches").all()
+    assert status["status"].eq("ready").all()
 
 
 def test_cli_writes_audits_and_panel_skeleton(tmp_path: Path) -> None:
@@ -60,7 +76,7 @@ def test_cli_writes_audits_and_panel_skeleton(tmp_path: Path) -> None:
     assert (tmp_path / "holder_absorption_panel.csv").exists()
 
 
-def test_cli_writes_real_panel(tmp_path: Path) -> None:
+def test_cli_writes_panel_from_contract_sources(tmp_path: Path) -> None:
     contracts = tmp_path / "source_contracts.yml"
     contracts.write_text(
         Path("config/source_contracts.yml")

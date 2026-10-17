@@ -70,6 +70,18 @@ def test_build_holder_panel_from_contract_sources() -> None:
     assert panel["gross_marketable_issuance"].notna().any()
 
 
+def test_contract_transforms_preserve_units_sign_lag_and_residual() -> None:
+    panel = build_holder_panel(load_source_contracts("config/source_contracts.yml"), _mix_config())
+
+    # The synthetic raw files plant these values before the real transformations.
+    row = panel.iloc[1]
+    assert row["sector_tx_fed"] == pytest.approx(4.0)
+    assert row["toc_change"] == pytest.approx(3.0)
+    assert row["wam_gap_trailing"] == pytest.approx(0.75)
+    assert row["sector_tx_unmapped"] == pytest.approx(2.0)
+    assert pd.isna(panel.iloc[0]["wam_gap_trailing"])
+
+
 def test_build_exact_fu_primary_holder_panel_requires_ready_gate() -> None:
     contracts = load_source_contracts(Path("config/source_contracts.yml"))
     mix = _mix_config()

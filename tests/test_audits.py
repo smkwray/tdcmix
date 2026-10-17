@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from tdcmix.audits import (
     build_sector_map_audit,
@@ -23,7 +24,8 @@ def test_sector_map_audit_covers_all_buckets() -> None:
     assert (audit["status"] != "missing_contract").all()
 
 
-def test_source_overlap_audit_reports_existing_sources() -> None:
+@pytest.mark.parametrize("source_kind", ["synthetic", pytest.param("retained", marks=pytest.mark.integration)])
+def test_source_overlap_audit_reports_existing_sources(source_kind: str) -> None:
     contracts = load_source_contracts(Path("config/source_contracts.yml"))
 
     audit = build_source_overlap_audit(contracts)
@@ -95,7 +97,8 @@ def test_z1_candidate_audit_maps_local_candidate_schemas(tmp_path: Path) -> None
     assert audit["non_null_observation_count"].min() == 2
 
 
-def test_source_upgrade_recommendations_keep_grouped_mmf_and_other_financial() -> None:
+@pytest.mark.parametrize("source_kind", ["synthetic", pytest.param("retained", marks=pytest.mark.integration)])
+def test_source_upgrade_recommendations_keep_grouped_mmf_and_other_financial(source_kind: str) -> None:
     contracts = load_source_contracts(Path("config/source_contracts.yml"))
     candidates = build_z1_candidate_audit()
 

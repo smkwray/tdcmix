@@ -841,7 +841,8 @@ def build_exact_candidate_sensitivity_estimates(
                 )
                 rows.append(estimate)
     if not rows:
-        return pd.DataFrame(columns=["sensitivity_variant"])
+        # Summary and report writers filter status even when triage admits no candidate.
+        return pd.DataFrame(columns=["sensitivity_variant", "status"])
     out = pd.DataFrame(rows)
     lead = ["outcome", "contrast", "horizon", "sensitivity_variant", "sample"]
     return out[[*lead, *[column for column in out.columns if column not in lead]]].sort_values(

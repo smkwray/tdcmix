@@ -248,6 +248,18 @@ def test_exact_candidate_concentration_and_regime_summaries() -> None:
     assert "Exact-FU Candidate Concentration Diagnostics" in report
 
 
+def test_no_candidate_sensitivity_outputs_remain_empty() -> None:
+    triage = pd.DataFrame({"appendix_candidate_status": ["hold_timing_concern"]})
+
+    estimates = build_exact_candidate_sensitivity_estimates(triage, pd.DataFrame(), pd.DataFrame())
+    summary = build_exact_candidate_sensitivity_summary(estimates)
+    report = build_exact_candidate_sensitivity_report(summary, estimates)
+
+    assert estimates.empty
+    assert summary.empty
+    assert "No sensitivity rows available." in report
+
+
 def test_exact_candidate_sensitivity_estimates() -> None:
     triage = pd.DataFrame(
         {

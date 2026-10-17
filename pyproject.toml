@@ -22,4 +22,9 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-p no:cacheprovider"
+addopts = "-p no:cacheprovider -m 'not integration'"
+markers = ["integration: checks requiring the configured sibling source datasets"]
+
+[tool.ruff.lint]
+# Explicit correctness checks independent of Ruff version defaults.
+select = ["E4", "E7", "E9", "F"]
